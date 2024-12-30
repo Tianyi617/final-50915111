@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RFID 卡片管理</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #915242, #ead1bd);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      font-family: 'Poppins', sans-serif;
+      color: white;
+    }
+
+    .navbar {
+      background-color: rgba(174, 101, 18, 0.7);
+    }
+
+    .navbar-brand,
+    .nav-link {
+      font-weight: bold;
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
+      }
+
+      100% {
+        opacity: 1;
+      }
+    }
+  </style>
+  <!-- 引入 Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- 引入 Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+
+    // Firebase 配置
+    const firebaseConfig = {
+      apiKey: "AIzaSyA2GwJ4rH-_iLnk5edGC3vYRBKt1LILCs0",
+      authDomain: "finaldatabase-27e57.firebaseapp.com",
+      databaseURL: "https://finaldatabase-27e57-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "finaldatabase-27e57",
+      storageBucket: "finaldatabase-27e57.appspot.com",
+      messagingSenderId: "965520226790",
+      appId: "1:965520226790:web:b5584430d510f8b30c3e27"
+    };
+
+    // 初始化 Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    // 創建 RFID 卡片函式
+    function createRFIDCard(cardID, name, status, entryTime) {
+      const cardRef = ref(database, `rfid_cards/${cardID}`);
+      set(cardRef, {
+        name: name,
+        status: status,
+        entry_time: entryTime
+      })
+        .then(() => {
+          console.log(`RFID 卡片 ${cardID} 創建成功！`);
+          document.getElementById("status").innerText = translations[language].cardCreatedSuccess.replace("{cardID}", cardID);
+        })
+        .catch((error) => {
+          console.error("創建 RFID 卡片時出錯：", error);
+          document.getElementById("status").innerText = translations[language].cardCreateError;
+        });
+    }
+
+    // 設置語言切換功能
+    let language = 'zh';  // 默認語言設置為中文
+    const translations = {
+      zh: {
+        title: "RFID 卡片管理系統",
+        cardID: "卡號：",
+        cardName: "持卡人姓名：",
+        cardStatus: "狀態：",
+        cardCreateButton: "創建卡片",
+        cardCreatedSuccess: "卡片 {cardID} 已創建成功！",
+        cardCreateError: "創建卡片時發生錯誤！",
+        status: "狀態：",
+        homepage: "首頁",
+        newcard: "新增卡片",
+        balance: "餘額",
+        inOption: "進場",  // 新增
+        outOption: "出場",  // 新增
+        placeholderCardID: "輸入卡號",
+        placeholderCardName: "輸入持卡人姓名"
+      },
+      en: {
+        title: "RFID Card Management System",
+        cardID: "Card ID:",
+        cardName: "Cardholder Name:",
+        cardStatus: "Status:",
+        cardCreateButton: "Create Card",
+        cardCreatedSuccess: "Card {cardID} created successfully!",
+        cardCreateError: "Error creating card!",
+        status: "Status:",
+        homepage: "Home",
+        newcard: "Create New Card",
+        balance: "Balance",
+        inOption: "In",  // 新增
+        outOption: "Out",  // 新增
+        placeholderCardID: "Enter Card ID",
+        placeholderCardName: "Enter Cardholder Name"
+      }
+    };
+
+    function changeLanguage(newLang) {
+      language = newLang;
+      document.getElementById("page-title").innerText = translations[language].title;
+      document.getElementById("card-id-label").innerText = translations[language].cardID;
+      document.getElementById("card-name-label").innerText = translations[language].cardName;
+      document.getElementById("card-status-label").innerText = translations[language].cardStatus;
+      document.getElementById("create-card").innerText = translations[language].cardCreateButton;
+      document.getElementById("status").innerText = translations[language].status;
+      document.getElementById("homepage").innerText = translations[language].homepage;
+      document.getElementById("newcard").innerText = translations[language].newcard;
+      document.getElementById("balance").innerText = translations[language].balance;
+      document.getElementById("card-id").innerText = translations[language].cardID;
+
+      // 更新 select 中的選項文本
+      document.getElementById("in-option").innerText = translations[language].inOption;
+      document.getElementById("out-option").innerText = translations[language].outOption;
+      // 更新 placeholder
+      document.getElementById("card-id").setAttribute("placeholder", translations[language].placeholderCardID);
+      document.getElementById("card-name").setAttribute("placeholder", translations[language].placeholderCardName);
+    }
+
+    // 綁定語言切換事件
+    document.getElementById("language-switch").addEventListener("change", (event) => {
+      changeLanguage(event.target.value);
+    });
+
+    // 綁定按鈕事件
+    document.getElementById("create-card").addEventListener("click", () => {
+      const cardID = document.getElementById("card-id").value.trim();
+      const name = document.getElementById("card-name").value.trim();
+      const status = document.getElementById("card-status").value;
+      const entryTime = status === "in" ? new Date().toISOString() : null;
+
+      if (cardID && name) {
+        createRFIDCard(cardID, name, status, entryTime);
+      } else {
+        document.getElementById("status").innerText = translations[language].cardCreateError;
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <!-- 導覽列 -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">
+        <img src="logo.jpg" alt="Logo" style="width: 40px; height: auto;">
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="index.html" id="homepage">首頁</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="createnewcard.html" id="newcard">新增卡片</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="balance.html" id="balance">餘額</a>
+          </li>
+        </ul>
+      </div>
+      <select id="language-switch" class="form-select" style="width: auto;">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+  </nav>
+
+  <!-- 主內容 -->
+  <div class="container mt-5">
+    <h1 class="text-center mb-4" id="page-title" style="color: #F0E5D8;">RFID 卡片管理系統</h1>
+    <div class="card shadow" style="background-color: #6E4B3A; border-radius: 10px;">
+      <div class="card-body" style="color: #F0E5D8;">
+        <form>
+          <div class="mb-3">
+            <label for="card-id" class="form-label" id="card-id-label" style="color: #F0E5D8;">卡號：</label>
+            <input id="card-id" type="text" class="form-control" placeholder="輸入卡號" style="background-color: #4B3B2F; color: #F0E5D8; border: 1px solid #F0E5D8;">
+          </div>
+          <div class="mb-3">
+            <label for="card-name" class="form-label" id="card-name-label" style="color: #F0E5D8;">持卡人姓名：</label>
+            <input id="card-name" type="text" class="form-control" placeholder="輸入持卡人姓名" style="background-color: #4B3B2F; color: #F0E5D8; border: 1px solid #F0E5D8;">
+          </div>
+          <div class="mb-3">
+            <label for="card-status" class="form-label" id="card-status-label" style="color: #F0E5D8;">狀態：</label>
+            <select id="card-status" class="form-select" style="background-color: #4B3B2F; color: #F0E5D8; border: 1px solid #F0E5D8;">
+              <option value="in" id="in-option" style="background-color: #4B3B2F; color: #F0E5D8;">進場</option>
+              <option value="out" id="out-option" style="background-color: #4B3B2F; color: #F0E5D8;">出場</option>
+            </select>
+          </div>
+          <button type="button" id="create-card" class="btn btn-warning w-100" style="background-color: #F0E5D8; color: #6E4B3A;">創建卡片</button>
+        </form>
+        <p id="status" class="mt-3 text-center" style="color: #F0E5D8;"></p>
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- 引入 Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
